@@ -32,6 +32,13 @@ Pour utiliser l’interface localement, il faut d’abord télécharger les fich
 - `interface.html`
 - `backend_app.py`
 - `calculateur_itineraire.py`
+- `requirements.txt`
+
+Et installer toutes les dépendances en une seule commande :
+
+```bash
+pip install -r requirements.txt
+```
 
 #### 1. Préparation du réseau
 
