@@ -3,8 +3,8 @@ import osmnx as ox
 import os
 import pickle
 
-NETWORK_FILE = "VALLORBE_MERGE.graphml"
-PICKLE_FILE = "VALLORBE_MERGE.pkl"  # Un format plus efficace pour stocker le graphe
+NETWORK_FILE = "Vaud.graphml"
+PICKLE_FILE = "Vaud.pkl"  # Un format plus efficace pour stocker le graphe
 
 def load_network():
     """
