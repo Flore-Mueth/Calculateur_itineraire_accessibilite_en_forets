@@ -8,7 +8,8 @@ PICKLE_FILE = "Vaud.pkl"  # Un format plus efficace pour stocker le graphe
 
 def load_network():
     """
-    Charge le réseau depuis un fichier s'il existe, sinon le crée et le sauvegarde.
+    Charge le réseau depuis un fichier s'il existe, sinon exécute le notebook 
+    preparation_reseau.ipynb pour télécharger et préparer le réseau.
     Utilise pickle pour un chargement plus rapide.
     """
     # Essayer d'abord avec pickle pour un chargement plus rapide
@@ -27,34 +28,45 @@ def load_network():
             pickle.dump(G, f)
         return G
     
-    # Sinon, créer un nouveau réseau
+    # Si aucun fichier n'existe, exécuter le notebook pour préparer le réseau
     else:
-        print("Création d'un nouveau réseau pour le canton de Vaud...")
-        try:
-            # Limite du réseau à une zone plus petite pour réduire la taille
-            G = ox.graph.graph_from_place("Vaud, Suisse", network_type="drive")
-            G = ox.routing.add_edge_speeds(G)
-            G = ox.routing.add_edge_travel_times(G)
-            
-            # Sauvegarde aux deux formats
-            ox.save_graphml(G, NETWORK_FILE)
-            with open(PICKLE_FILE, 'wb') as f:
-                pickle.dump(G, f)
+        print("Aucun fichier réseau trouvé. Exécution du notebook pour préparer le réseau...")
+        # notebook_path = "preparation_reseau.ipynb"
+        notebook_path = "preparation_reseau.ipynb"
+
+        
+        if os.path.exists(notebook_path):
+            try:
+                import subprocess
+                print(f"Exécution du notebook {notebook_path}...")
+                result = subprocess.run(["jupyter", "nbconvert", "--execute", "--to", "notebook", 
+                                       "--inplace", notebook_path], 
+                                      capture_output=True, text=True)
                 
-            return G
-        except Exception as e:
-            print(f"Erreur lors de la création du réseau: {e}")
-            # Solution de secours: créer un petit réseau autour de Vallorbe
-            G = ox.graph.graph_from_place("Vallorbe, District du Jura-Nord vaudois, Vaud, 1337, Suisse", network_type="drive")
-            G = ox.routing.add_edge_speeds(G)
-            G = ox.routing.add_edge_travel_times(G)
-            
-            # Sauvegarde aux deux formats
-            ox.save_graphml(G, NETWORK_FILE)
-            with open(PICKLE_FILE, 'wb') as f:
-                pickle.dump(G, f)
-                
-            return G
+                if result.returncode == 0:
+                    print("Notebook exécuté avec succès, tentative de chargement du réseau...")
+                    # Tenter de charger le réseau après l'exécution du notebook
+                    if os.path.exists(PICKLE_FILE):
+                        with open(PICKLE_FILE, 'rb') as f:
+                            G = pickle.load(f)
+                        return G
+                    elif os.path.exists(NETWORK_FILE):
+                        G = ox.load_graphml(NETWORK_FILE)
+                        # Sauvegarder au format pickle pour la prochaine fois
+                        with open(PICKLE_FILE, 'wb') as f:
+                            pickle.dump(G, f)
+                        return G
+                    else:
+                        raise Exception("Aucun fichier réseau trouvé après l'exécution du notebook")
+                else:
+                    print(f"Erreur lors de l'exécution du notebook: {result.stderr}")
+                    raise Exception("Échec de l'exécution du notebook")
+            except Exception as e:
+                print(f"Erreur lors de l'exécution du notebook: {e}")
+                raise Exception("Impossible de charger ou créer le réseau routier")
+        else:
+            print(f"Le fichier notebook {notebook_path} n'existe pas")
+            raise Exception("Fichier notebook de préparation du réseau introuvable")
 
 def calculate_route(G, lat1, lng1, lat2, lng2):
     """
