@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from claude_interface_code_updated import calculate_route, load_network, get_network_edges
+from calculateur_itineraire import calculate_route, load_network, get_network_edges
 import traceback
 
 app = Flask(__name__)
