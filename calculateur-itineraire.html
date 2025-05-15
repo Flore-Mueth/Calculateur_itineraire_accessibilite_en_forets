@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Calculateur d'Itinéraire en cas d'Incendie</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #d32f2f;
+            text-align: center;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #coordinateForm {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        label {
+            display: inline-block;
+            width: 100px;
+            margin-bottom: 10px;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+        button {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #b71c1c;
+        }
+        #result {
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #d32f2f;
+        }
+        .coordinate-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 15px 0;
+        }
+        #error {
+            color: red;
+            font-weight: bold;
+        }
+        .form-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .toggle-button {
+            background-color: #607d8b;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .toggle-button:hover {
+            background-color: #455a64;
+        }
+        .toggle-button.active {
+            background-color: #2e7d32;
+        }
+        .summary {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-weight: bold;
+        }
+        .summary-item {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+        }
+        .placeholder-text {
+            color: #999;
+            font-style: italic;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calculateur d'Itinéraire en cas d'Incendie</h1>
+    <div id="coordinateForm">
+        <h2>Coordonnées de la Caserne</h2>
+        <div class="coordinate-section">
+            <div class="input-group">
+                <label for="latCaserne">Latitude :</label>
+                <input type="number" id="latCaserne" name="latCaserne" step="any" placeholder="Ex: 46.7065807" required>
+                <div class="placeholder-text">Format décimal (ex: 46.7065807)</div>
+            </div>
+            <div class="input-group">
+                <label for="lngCaserne">Longitude :</label>
+                <input type="number" id="lngCaserne" name="lngCaserne" step="any" placeholder="Ex: 6.4031464" required>
+                <div class="placeholder-text">Format décimal (ex: 6.4031464)</div>
+            </div>
+        </div>
+        <h2>Coordonnées du Lieu de l'Incendie</h2>
+        <div class="coordinate-section">
+            <div class="input-group">
+                <label for="latFire">Latitude :</label>
+                <input type="number" id="latFire" name="latFire" step="any" placeholder="Ex: 46.7187537" required>
+                <div class="placeholder-text">Format décimal (ex: 46.7187537)</div>
+            </div>
+            <div class="input-group">
+                <label for="lngFire">Longitude :</label>
+                <input type="number" id="lngFire" name="lngFire" step="any" placeholder="Ex: 6.3643332" required>
+                <div class="placeholder-text">Format décimal (ex: 6.3643332)</div>
+            </div>
+        </div>
+        <div class="form-controls">
+            <button type="button" id="calculateBtn" onclick="submitCoordinates()">Calculer l'Itinéraire</button>
+            <button type="button" id="networkBtn" class="toggle-button" onclick="toggleNetwork()">Afficher le Réseau</button>
+        </div>
+        <div id="loading" class="loading">Calcul en cours, veuillez patienter...</div>
+        
+        <div class="summary" id="routeSummary" style="display: none;">
+            <div class="summary-item" id="distanceSummary">Distance: -- m</div>
+            <div class="summary-item" id="timeSummary">Temps estimé: -- min</div>
+        </div>
+    </div>
+    <p id="result"></p>
+    <p id="error"></p>
+    <div id="map"></div>
+
+    <script>
+        // Initialisation de la carte - centrer sur la Suisse
+        const map = L.map('map').setView([46.8182, 8.2275], 8);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Variables pour gérer l'affichage
+        let currentPolyline = null;
+        let markers = [];
+        let networkLayer = null;
+        let isNetworkVisible = false;
+
+        // Cliquer sur la carte pour sélectionner des positions
+        map.on('click', function(e) {
+            const activeElement = document.activeElement;
+            if (activeElement && (activeElement.id === 'latCaserne' || activeElement.id === 'lngCaserne' ||
+                                 activeElement.id === 'latFire' || activeElement.id === 'lngFire')) {
+                // Arrondir à 7 décimales
+                const lat = e.latlng.lat.toFixed(7);
+                const lng = e.latlng.lng.toFixed(7);
+                
+                if (activeElement.id === 'latCaserne' || activeElement.id === 'latFire') {
+                    activeElement.value = lat;
+                    // Sélectionner automatiquement le champ longitude correspondant
+                    const nextElement = activeElement.id === 'latCaserne' ? 
+                                       document.getElementById('lngCaserne') : 
+                                       document.getElementById('lngFire');
+                    nextElement.value = lng;
+                } else {
+                    activeElement.value = lng;
+                }
+            }
+        });
+
+        async function submitCoordinates() {
+            // Réinitialiser les messages d'erreur
+            document.getElementById('error').innerText = "";
+            document.getElementById('result').innerText = "";
+            document.getElementById('routeSummary').style.display = "none";
+            
+            // Récupérer les valeurs des champs
+            const latCaserne = parseFloat(document.getElementById('latCaserne').value);
+            const lngCaserne = parseFloat(document.getElementById('lngCaserne').value);
+            const latFire = parseFloat(document.getElementById('latFire').value);
+            const lngFire = parseFloat(document.getElementById('lngFire').value);
+
+            // Vérifier que les coordonnées sont valides
+            if (isNaN(latCaserne) || isNaN(lngCaserne) || isNaN(latFire) || isNaN(lngFire)) {
+                document.getElementById('error').innerText = "Veuillez entrer des coordonnées valides.";
+                return;
+            }
+
+            // Afficher l'indicateur de chargement
+            document.getElementById('loading').style.display = "block";
+            document.getElementById('calculateBtn').disabled = true;
+
+            try {
+                console.log("Envoi des coordonnées au serveur:", {
+                    lat1: latCaserne,
+                    lng1: lngCaserne,
+                    lat2: latFire,
+                    lng2: lngFire
+                });
+                
+                const response = await fetch('http://127.0.0.1:5000/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        lat1: latCaserne,
+                        lng1: lngCaserne,
+                        lat2: latFire,
+                        lng2: lngFire
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur serveur: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log("Réponse du serveur:", result);
+                
+                document.getElementById('result').innerText = result.message;
+
+                // Afficher le résumé
+                if (result.distance && result.travel_time) {
+                    document.getElementById('distanceSummary').innerText = `Distance: ${(result.distance/1000).toFixed(2)} km`;
+                    document.getElementById('timeSummary').innerText = `Temps estimé: ${result.travel_time.toFixed(2)} min`;
+                    document.getElementById('routeSummary').style.display = "flex";
+                }
+
+                // Vérifier que la géométrie de la route est retournée
+                if (!result.route_geometry || result.route_geometry.length === 0) {
+                    throw new Error("Aucune géométrie de route retournée !");
+                }
+
+                // Supprimer l'ancienne route et les marqueurs
+                if (currentPolyline) {
+                    map.removeLayer(currentPolyline);
+                }
+                markers.forEach(marker => map.removeLayer(marker));
+                markers = [];
+
+                // Convertir les coordonnées du format [lng, lat] à [lat, lng] pour Leaflet
+                const latlngs = result.route_geometry.map(coord => [coord[1], coord[0]]);
+
+                // Ajouter la nouvelle route
+                currentPolyline = L.polyline(latlngs, { 
+                    color: 'red',
+                    weight: 5,
+                    opacity: 0.8
+                }).addTo(map);
+                
+                // Ajouter les marqueurs
+                markers.push(L.marker([latCaserne, lngCaserne])
+                    .addTo(map)
+                    .bindPopup(`<strong>Caserne</strong><br>Point de départ`)
+                    .openPopup());
+                    
+                markers.push(L.marker([latFire, lngFire])
+                    .addTo(map)
+                    .bindPopup(`<strong>Incendie</strong><br>Destination<br>Temps d'arrivée estimé: ${result.travel_time} min`));
+
+                // Adapter la vue pour montrer tout le trajet
+                map.fitBounds(latlngs);
+                
+            } catch (error) {
+                console.error("Erreur:", error);
+                document.getElementById('error').innerText = `Erreur: ${error.message}`;
+            } finally {
+                // Cacher l'indicateur de chargement
+                document.getElementById('loading').style.display = "none";
+                document.getElementById('calculateBtn').disabled = false;
+            }
+        }
+
+        async function loadNetworkData() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/network');
+                if (!response.ok) {
+                    throw new Error(`Erreur serveur: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log("Réseau chargé, nombre d'arêtes:", data.edges.length);
+                
+                return data.edges;
+            } catch (error) {
+                console.error("Erreur lors du chargement du réseau:", error);
+                document.getElementById('error').innerText = `Erreur lors du chargement du réseau: ${error.message}`;
+                return [];
+            }
+        }
+
+        async function toggleNetwork() {
+            const networkBtn = document.getElementById('networkBtn');
+            
+            if (isNetworkVisible && networkLayer) {
+                // Cacher le réseau
+                map.removeLayer(networkLayer);
+                networkLayer = null;
+                isNetworkVisible = false;
+                networkBtn.innerText = "Afficher le Réseau";
+                networkBtn.classList.remove('active');
+            } else {
+                // Afficher le réseau
+                networkBtn.disabled = true;
+                networkBtn.innerText = "Chargement...";
+                
+                const edges = await loadNetworkData();
+                
+                // Créer une couche pour toutes les arêtes du réseau
+                networkLayer = L.layerGroup();
+                
+                // Ajouter chaque arête comme une ligne
+                edges.forEach(edge => {
+                    L.polyline(edge, {
+                        color: '#2196f3',
+                        weight: 1,
+                        opacity: 0.5
+                    }).addTo(networkLayer);
+                });
+                
+                // Ajouter la couche à la carte
+                networkLayer.addTo(map);
+                isNetworkVisible = true;
+                
+                networkBtn.innerText = "Cacher le Réseau";
+                networkBtn.classList.add('active');
+                networkBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
