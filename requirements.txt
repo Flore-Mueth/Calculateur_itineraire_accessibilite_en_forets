@@ -1,0 +1,6 @@
+osmnx[all]
+flask
+networkx
+shapely
+geopandas
+matplotlib
