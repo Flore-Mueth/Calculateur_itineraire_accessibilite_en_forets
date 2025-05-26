@@ -1,368 +1,775 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
     <title>Calculateur d'Itinéraire en cas d'Incendie</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1 {
-            color: #d32f2f;
-            text-align: center;
-        }
-        #map {
-            height: 500px;
-            width: 100%;
-            margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        #coordinateForm {
-            background-color: #f5f5f5;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        label {
-            display: inline-block;
-            width: 100px;
-            margin-bottom: 10px;
-        }
-        input {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 200px;
-        }
-        button {
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-        button:hover {
-            background-color: #b71c1c;
-        }
-        #result {
-            font-weight: bold;
-            margin: 15px 0;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-left: 4px solid #d32f2f;
-        }
-        .coordinate-section {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .input-group {
-            flex: 1;
-            min-width: 200px;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 15px 0;
-        }
-        #error {
-            color: red;
-            font-weight: bold;
-        }
-        .form-controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .toggle-button {
-            background-color: #607d8b;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .toggle-button:hover {
-            background-color: #455a64;
-        }
-        .toggle-button.active {
-            background-color: #2e7d32;
-        }
-        .summary {
-            margin-top: 15px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            font-weight: bold;
-        }
-        .summary-item {
-            flex: 1;
-            min-width: 200px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-left: 4px solid #2196f3;
-            border-radius: 4px;
-        }
-        .placeholder-text {
-            color: #999;
-            font-style: italic;
-            margin-top: 5px;
-            font-size: 12px;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #d32f2f;
+        text-align: center;
+      }
+      #map {
+        height: 500px;
+        width: 100%;
+        margin: 20px 0;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      #coordinateForm {
+        background-color: #f5f5f5;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      label {
+        display: inline-block;
+        width: 100px;
+        margin-bottom: 10px;
+      }
+      input {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 200px;
+      }
+      button {
+        background-color: #d32f2f;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 15px;
+        font-weight: bold;
+      }
+      button:hover {
+        background-color: #b71c1c;
+      }
+      #result {
+        font-weight: bold;
+        margin: 15px 0;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #d32f2f;
+      }
+      .coordinate-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+      .input-group {
+        flex: 1;
+        min-width: 200px;
+      }
+      .loading {
+        display: none;
+        text-align: center;
+        margin: 15px 0;
+      }
+      #error {
+        color: red;
+        font-weight: bold;
+      }
+      .form-controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+      .toggle-button {
+        background-color: #607d8b;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .toggle-button:hover {
+        background-color: #455a64;
+      }
+      .toggle-button.active {
+        background-color: #2e7d32;
+      }
+      .summary {
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        font-weight: bold;
+      }
+      .summary-item {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #2196f3;
+        border-radius: 4px;
+      }
+      .placeholder-text {
+        color: #999;
+        font-style: italic;
+        margin-top: 5px;
+        font-size: 12px;
+      }
+      
+      /* Styles pour les itinéraires multiples */
+      #routesContainer {
+        margin-top: 20px;
+        display: none;
+      }
+      .route-item {
+        background-color: #fff;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .route-item:hover {
+        border-color: #2196f3;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .route-item.selected {
+        border-color: #d32f2f;
+        background-color: #fff5f5;
+      }
+      .route-item.highlighted {
+        border-color: #ff9800;
+        background-color: #fff8e1;
+      }
+      .route-info {
+        flex: 1;
+      }
+      .route-title {
+        font-weight: bold;
+        color: #d32f2f;
+        margin-bottom: 5px;
+      }
+      .route-details {
+        color: #666;
+        font-size: 14px;
+      }
+      .route-actions {
+        display: flex;
+        gap: 10px;
+      }
+      .route-button {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background-color 0.3s;
+      }
+      .route-button.show {
+        background-color: #2196f3;
+        color: white;
+      }
+      .route-button.show:hover {
+        background-color: #1976d2;
+      }
+      .route-button.hide {
+        background-color: #f44336;
+        color: white;
+      }
+      .route-button.hide:hover {
+        background-color: #d32f2f;
+      }
+      .routes-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .routes-controls {
+        display: flex;
+        gap: 10px;
+      }
+      .control-button {
+        padding: 8px 12px;
+        background-color: #607d8b;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .control-button:hover {
+        background-color: #455a64;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Calculateur d'Itinéraire en cas d'Incendie</h1>
     <div id="coordinateForm">
-        <h2>Coordonnées de la Caserne</h2>
-        <div class="coordinate-section">
-            <div class="input-group">
-                <label for="latCaserne">Latitude :</label>
-                <input type="number" id="latCaserne" name="latCaserne" step="any" placeholder="Ex: 46.7065807" required>
-                <div class="placeholder-text">Format décimal (ex: 46.7065807)</div>
-            </div>
-            <div class="input-group">
-                <label for="lngCaserne">Longitude :</label>
-                <input type="number" id="lngCaserne" name="lngCaserne" step="any" placeholder="Ex: 6.4031464" required>
-                <div class="placeholder-text">Format décimal (ex: 6.4031464)</div>
-            </div>
+      <h2>Coordonnées de la Caserne</h2>
+      <div class="coordinate-section">
+        <div class="input-group">
+          <label for="latCaserne">Latitude :</label>
+          <input
+            type="number"
+            id="latCaserne"
+            name="latCaserne"
+            step="any"
+            required
+          />
+          <div class="placeholder-text">Format décimal (ex: 46.7065807)</div>
         </div>
-        <h2>Coordonnées du Lieu de l'Incendie</h2>
-        <div class="coordinate-section">
-            <div class="input-group">
-                <label for="latFire">Latitude :</label>
-                <input type="number" id="latFire" name="latFire" step="any" placeholder="Ex: 46.7187537" required>
-                <div class="placeholder-text">Format décimal (ex: 46.7187537)</div>
-            </div>
-            <div class="input-group">
-                <label for="lngFire">Longitude :</label>
-                <input type="number" id="lngFire" name="lngFire" step="any" placeholder="Ex: 6.3643332" required>
-                <div class="placeholder-text">Format décimal (ex: 6.3643332)</div>
-            </div>
+        <div class="input-group">
+          <label for="lngCaserne">Longitude :</label>
+          <input
+            type="number"
+            id="lngCaserne"
+            name="lngCaserne"
+            step="any"
+            required
+          />
+          <div class="placeholder-text">Format décimal (ex: 6.4031464)</div>
         </div>
-        <div class="form-controls">
-            <button type="button" id="calculateBtn" onclick="submitCoordinates()">Calculer l'Itinéraire</button>
-            <button type="button" id="networkBtn" class="toggle-button" onclick="toggleNetwork()">Afficher le Réseau</button>
+      </div>
+      <h2>Coordonnées du Lieu de l'Incendie</h2>
+      <div class="coordinate-section">
+        <div class="input-group">
+          <label for="latFire">Latitude :</label>
+          <input
+            type="number"
+            id="latFire"
+            name="latFire"
+            step="any"
+            required
+          />
+          <div class="placeholder-text">Format décimal (ex: 46.7187537)</div>
         </div>
-        <div id="loading" class="loading">Calcul en cours, veuillez patienter...</div>
-        
-        <div class="summary" id="routeSummary" style="display: none;">
-            <div class="summary-item" id="distanceSummary">Distance: -- m</div>
-            <div class="summary-item" id="timeSummary">Temps estimé: -- min</div>
+        <div class="input-group">
+          <label for="lngFire">Longitude :</label>
+          <input
+            type="number"
+            id="lngFire"
+            name="lngFire"
+            step="any"
+            required
+          />
+          <div class="placeholder-text">Format décimal (ex: 6.3643332)</div>
         </div>
+      </div>
+      <div class="form-controls">
+        <button type="button" id="calculateBtn" onclick="submitCoordinates()">
+          Calculer les Itinéraires
+        </button>
+        <button
+          type="button"
+          id="networkBtn"
+          class="toggle-button"
+          onclick="toggleNetwork()"
+        >
+          Afficher le Réseau
+        </button>
+        <button 
+          type="button" 
+          onclick="deleteSelectedEdges()"
+          >
+          Supprimer les lignes sélectionnées
+        </button>
+        <button 
+          onclick="saveNetwork()" 
+          style="position: absolute; top: 20px; right: 20px;"
+          >Enregistrer le réseau
+        </button>
+      </div>
+      <div id="loading" class="loading">
+        Calcul en cours, veuillez patienter...
+      </div>
     </div>
+    
     <p id="result"></p>
     <p id="error"></p>
+    
+    <!-- Container pour les itinéraires multiples -->
+    <div id="routesContainer">
+      <div class="routes-header">
+        <h3>Itinéraires trouvés</h3>
+        <div class="routes-controls">
+          <button class="control-button" onclick="showAllRoutes()">Afficher tout</button>
+          <button class="control-button" onclick="hideAllRoutes()">Masquer tout</button>
+          <button class="control-button" onclick="showBestRoute()">Meilleur seul</button>
+        </div>
+      </div>
+      <div id="routesList"></div>
+    </div>
+    
     <div id="map"></div>
 
     <script>
-        // Initialisation de la carte - centrer sur la Suisse
-        const map = L.map('map').setView([46.8182, 8.2275], 8);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+      // Initialisation de la carte - centrer sur la Suisse
+      const map = L.map("map").setView([46.8182, 8.2275], 8);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap",
+      }).addTo(map);
 
-        // Variables pour gérer l'affichage
-        let currentPolyline = null;
-        let markers = [];
-        let networkLayer = null;
-        let isNetworkVisible = false;
+      // Variables pour gérer l'affichage
+      let markers = [];
+      let networkLayer = null;
+      let isNetworkVisible = false;
+      let selectedEdges = [];
+      
+      // Variables pour les itinéraires multiples
+      let allRoutes = [];
+      let routePolylines = [];
 
-        // Cliquer sur la carte pour sélectionner des positions
-        map.on('click', function(e) {
-            const activeElement = document.activeElement;
-            if (activeElement && (activeElement.id === 'latCaserne' || activeElement.id === 'lngCaserne' ||
-                                 activeElement.id === 'latFire' || activeElement.id === 'lngFire')) {
-                // Arrondir à 7 décimales
-                const lat = e.latlng.lat.toFixed(7);
-                const lng = e.latlng.lng.toFixed(7);
-                
-                if (activeElement.id === 'latCaserne' || activeElement.id === 'latFire') {
-                    activeElement.value = lat;
-                    // Sélectionner automatiquement le champ longitude correspondant
-                    const nextElement = activeElement.id === 'latCaserne' ? 
-                                       document.getElementById('lngCaserne') : 
-                                       document.getElementById('lngFire');
-                    nextElement.value = lng;
-                } else {
-                    activeElement.value = lng;
-                }
-            }
+      // Couleurs pour les différents itinéraires
+      const routeColors = ['#d32f2f', '#1976d2', '#388e3c', '#f57c00', '#7b1fa2'];
+
+      // Cliquer sur la carte pour sélectionner des positions
+      map.on("click", function (e) {
+        const activeElement = document.activeElement;
+        if (
+          activeElement &&
+          (activeElement.id === "latCaserne" ||
+            activeElement.id === "lngCaserne" ||
+            activeElement.id === "latFire" ||
+            activeElement.id === "lngFire")
+        ) {
+          // Arrondir à 7 décimales
+          const lat = e.latlng.lat.toFixed(7);
+          const lng = e.latlng.lng.toFixed(7);
+
+          if (
+            activeElement.id === "latCaserne" ||
+            activeElement.id === "latFire"
+          ) {
+            activeElement.value = lat;
+            // Sélectionner automatiquement le champ longitude correspondant
+            const nextElement =
+              activeElement.id === "latCaserne"
+                ? document.getElementById("lngCaserne")
+                : document.getElementById("lngFire");
+            nextElement.value = lng;
+          } else {
+            activeElement.value = lng;
+          }
+        }
+      });
+
+      async function submitCoordinates() {
+        // Réinitialiser les messages d'erreur
+        document.getElementById("error").innerText = "";
+        document.getElementById("result").innerText = "";
+        document.getElementById("routesContainer").style.display = "none";
+
+        // Récupérer les valeurs des champs
+        const latCaserne = parseFloat(
+          document.getElementById("latCaserne").value
+        );
+        const lngCaserne = parseFloat(
+          document.getElementById("lngCaserne").value
+        );
+        const latFire = parseFloat(document.getElementById("latFire").value);
+        const lngFire = parseFloat(document.getElementById("lngFire").value);
+
+        // Vérifier que les coordonnées sont valides
+        if (
+          isNaN(latCaserne) ||
+          isNaN(lngCaserne) ||
+          isNaN(latFire) ||
+          isNaN(lngFire)
+        ) {
+          document.getElementById("error").innerText =
+            "Veuillez entrer des coordonnées valides.";
+          return;
+        }
+
+        // Afficher l'indicateur de chargement
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("calculateBtn").disabled = true;
+
+        try {
+          console.log("Envoi des coordonnées au serveur:", {
+            lat1: latCaserne,
+            lng1: lngCaserne,
+            lat2: latFire,
+            lng2: lngFire,
+          });
+
+          const response = await fetch("http://127.0.0.1:5000/process", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              lat1: latCaserne,
+              lng1: lngCaserne,
+              lat2: latFire,
+              lng2: lngFire,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Erreur serveur: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log("Réponse du serveur:", result);
+
+          // Vérifier si on a des routes (nouvelle API) ou une seule route (ancienne API)
+          if (result.routes && Array.isArray(result.routes)) {
+            // Nouvelle API avec plusieurs routes
+            allRoutes = result.routes;
+            displayMultipleRoutes(latCaserne, lngCaserne, latFire, lngFire);
+            document.getElementById("result").innerText = 
+              `${allRoutes.length} itinéraire(s) trouvé(s). Sélectionnez ceux à afficher ci-dessous.`;
+          } else if (result.route_geometry) {
+            // Ancienne API avec une seule route - convertir au nouveau format
+            allRoutes = [{
+              geometry: result.route_geometry.map(coord => [coord[1], coord[0]]), // Convertir [lng,lat] en [lat,lng]
+              length: result.distance || 0,
+              travel_time: result.travel_time || 0
+            }];
+            displayMultipleRoutes(latCaserne, lngCaserne, latFire, lngFire);
+            document.getElementById("result").innerText = 
+              `1 itinéraire trouvé. Distance: ${(result.distance/1000).toFixed(2)} km, Temps: ${result.travel_time} min`;
+          } else {
+            throw new Error("Format de réponse inattendu du serveur");
+          }
+
+        } catch (error) {
+          console.error("Erreur:", error);
+          document.getElementById(
+            "error"
+          ).innerText = `Erreur: ${error.message}`;
+        } finally {
+          // Cacher l'indicateur de chargement
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("calculateBtn").disabled = false;
+        }
+      }
+
+      function displayMultipleRoutes(latCaserne, lngCaserne, latFire, lngFire) {
+        // Nettoyer les anciennes routes et marqueurs
+        clearAllRoutes();
+        clearMarkers();
+
+        // Ajouter les marqueurs
+        markers.push(
+          L.marker([latCaserne, lngCaserne])
+            .addTo(map)
+            // .bindPopup(`<strong>Caserne</strong><br>Point de départ`)
+            .openPopup()
+        );
+
+        markers.push(
+          L.marker([latFire, lngFire])
+            .addTo(map)
+            .bindPopup(`<strong>Incendie</strong><br>Destination`)
+        );
+
+        // Créer les polylines pour chaque route (mais ne pas les afficher tout de suite)
+        allRoutes.forEach((route, index) => {
+          const color = routeColors[index % routeColors.length];
+          const polyline = L.polyline(route.geometry, {
+            color: color,
+            weight: 4,
+            opacity: 0.8,
+          });
+          
+          routePolylines.push({
+            polyline: polyline,
+            visible: false,
+            route: route,
+            index: index
+          });
         });
 
-        async function submitCoordinates() {
-            // Réinitialiser les messages d'erreur
-            document.getElementById('error').innerText = "";
-            document.getElementById('result').innerText = "";
-            document.getElementById('routeSummary').style.display = "none";
+        // Afficher la liste des routes
+        displayRoutesList();
+        document.getElementById("routesContainer").style.display = "block";
+
+        // Afficher automatiquement la première route (la meilleure)
+        if (routePolylines.length > 0) {
+          showRoute(0);
+        }
+
+        // Adapter la vue pour montrer la zone
+        if (allRoutes.length > 0 && allRoutes[0].geometry.length > 0) {
+          const allPoints = [[latCaserne, lngCaserne], [latFire, lngFire]];
+          allRoutes.forEach(route => {
+            allPoints.push(...route.geometry);
+          });
+          map.fitBounds(allPoints);
+        }
+      }
+
+      function displayRoutesList() {
+        const routesList = document.getElementById("routesList");
+        routesList.innerHTML = "";
+
+        allRoutes.forEach((route, index) => {
+          const routeItem = document.createElement("div");
+          routeItem.className = "route-item";
+          routeItem.id = `route-item-${index}`;
+          
+          const color = routeColors[index % routeColors.length];
+          
+          routeItem.innerHTML = `
+            <div class="route-info">
+              <div class="route-title" style="color: ${color}">
+                Itinéraire ${index + 1} ${index === 0 ? '(Recommandé)' : ''}
+              </div>
+              <div class="route-details">
+                Distance: ${(route.length / 1000).toFixed(2)} km • 
+                Temps estimé: ${route.travel_time} min
+              </div>
+            </div>
+            <div class="route-actions">
+              <button class="route-button show" onclick="showRoute(${index})">Afficher</button>
+              <button class="route-button hide" onclick="hideRoute(${index})" style="display: none;">Masquer</button>
+            </div>
+          `;
+
+          // Événements pour survol
+          routeItem.addEventListener('mouseenter', () => highlightRoute(index));
+          routeItem.addEventListener('mouseleave', () => unhighlightRoute(index));
+
+          routesList.appendChild(routeItem);
+        });
+      }
+
+      function showRoute(index) {
+        if (index >= 0 && index < routePolylines.length) {
+          const routeData = routePolylines[index];
+          if (!routeData.visible) {
+            routeData.polyline.addTo(map);
+            routeData.visible = true;
             
-            // Récupérer les valeurs des champs
-            const latCaserne = parseFloat(document.getElementById('latCaserne').value);
-            const lngCaserne = parseFloat(document.getElementById('lngCaserne').value);
-            const latFire = parseFloat(document.getElementById('latFire').value);
-            const lngFire = parseFloat(document.getElementById('lngFire').value);
-
-            // Vérifier que les coordonnées sont valides
-            if (isNaN(latCaserne) || isNaN(lngCaserne) || isNaN(latFire) || isNaN(lngFire)) {
-                document.getElementById('error').innerText = "Veuillez entrer des coordonnées valides.";
-                return;
-            }
-
-            // Afficher l'indicateur de chargement
-            document.getElementById('loading').style.display = "block";
-            document.getElementById('calculateBtn').disabled = true;
-
-            try {
-                console.log("Envoi des coordonnées au serveur:", {
-                    lat1: latCaserne,
-                    lng1: lngCaserne,
-                    lat2: latFire,
-                    lng2: lngFire
-                });
-                
-                const response = await fetch('http://127.0.0.1:5000/process', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        lat1: latCaserne,
-                        lng1: lngCaserne,
-                        lat2: latFire,
-                        lng2: lngFire
-                    }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Erreur serveur: ${response.status}`);
-                }
-
-                const result = await response.json();
-                console.log("Réponse du serveur:", result);
-                
-                document.getElementById('result').innerText = result.message;
-
-                // Afficher le résumé
-                if (result.distance && result.travel_time) {
-                    document.getElementById('distanceSummary').innerText = `Distance: ${(result.distance/1000).toFixed(2)} km`;
-                    document.getElementById('timeSummary').innerText = `Temps estimé: ${result.travel_time.toFixed(2)} min`;
-                    document.getElementById('routeSummary').style.display = "flex";
-                }
-
-                // Vérifier que la géométrie de la route est retournée
-                if (!result.route_geometry || result.route_geometry.length === 0) {
-                    throw new Error("Aucune géométrie de route retournée !");
-                }
-
-                // Supprimer l'ancienne route et les marqueurs
-                if (currentPolyline) {
-                    map.removeLayer(currentPolyline);
-                }
-                markers.forEach(marker => map.removeLayer(marker));
-                markers = [];
-
-                // Convertir les coordonnées du format [lng, lat] à [lat, lng] pour Leaflet
-                const latlngs = result.route_geometry.map(coord => [coord[1], coord[0]]);
-
-                // Ajouter la nouvelle route
-                currentPolyline = L.polyline(latlngs, { 
-                    color: 'red',
-                    weight: 5,
-                    opacity: 0.8
-                }).addTo(map);
-                
-                // Ajouter les marqueurs
-                markers.push(L.marker([latCaserne, lngCaserne])
-                    .addTo(map)
-                    .bindPopup(`<strong>Caserne</strong><br>Point de départ`)
-                    .openPopup());
-                    
-                markers.push(L.marker([latFire, lngFire])
-                    .addTo(map)
-                    .bindPopup(`<strong>Incendie</strong><br>Destination<br>Temps d'arrivée estimé: ${result.travel_time} min`));
-
-                // Adapter la vue pour montrer tout le trajet
-                map.fitBounds(latlngs);
-                
-            } catch (error) {
-                console.error("Erreur:", error);
-                document.getElementById('error').innerText = `Erreur: ${error.message}`;
-            } finally {
-                // Cacher l'indicateur de chargement
-                document.getElementById('loading').style.display = "none";
-                document.getElementById('calculateBtn').disabled = false;
-            }
+            // Mettre à jour l'interface
+            const routeItem = document.getElementById(`route-item-${index}`);
+            routeItem.classList.add('selected');
+            routeItem.querySelector('.show').style.display = 'none';
+            routeItem.querySelector('.hide').style.display = 'inline-block';
+          }
         }
+      }
 
-        async function loadNetworkData() {
-            try {
-                const response = await fetch('http://127.0.0.1:5000/network');
-                if (!response.ok) {
-                    throw new Error(`Erreur serveur: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                console.log("Réseau chargé, nombre d'arêtes:", data.edges.length);
-                
-                return data.edges;
-            } catch (error) {
-                console.error("Erreur lors du chargement du réseau:", error);
-                document.getElementById('error').innerText = `Erreur lors du chargement du réseau: ${error.message}`;
-                return [];
-            }
-        }
-
-        async function toggleNetwork() {
-            const networkBtn = document.getElementById('networkBtn');
+      function hideRoute(index) {
+        if (index >= 0 && index < routePolylines.length) {
+          const routeData = routePolylines[index];
+          if (routeData.visible) {
+            map.removeLayer(routeData.polyline);
+            routeData.visible = false;
             
-            if (isNetworkVisible && networkLayer) {
-                // Cacher le réseau
-                map.removeLayer(networkLayer);
-                networkLayer = null;
-                isNetworkVisible = false;
-                networkBtn.innerText = "Afficher le Réseau";
-                networkBtn.classList.remove('active');
-            } else {
-                // Afficher le réseau
-                networkBtn.disabled = true;
-                networkBtn.innerText = "Chargement...";
-                
-                const edges = await loadNetworkData();
-                
-                // Créer une couche pour toutes les arêtes du réseau
-                networkLayer = L.layerGroup();
-                
-                // Ajouter chaque arête comme une ligne
-                edges.forEach(edge => {
-                    L.polyline(edge, {
-                        color: '#2196f3',
-                        weight: 1,
-                        opacity: 0.5
-                    }).addTo(networkLayer);
-                });
-                
-                // Ajouter la couche à la carte
-                networkLayer.addTo(map);
-                isNetworkVisible = true;
-                
-                networkBtn.innerText = "Cacher le Réseau";
-                networkBtn.classList.add('active');
-                networkBtn.disabled = false;
-            }
+            // Mettre à jour l'interface
+            const routeItem = document.getElementById(`route-item-${index}`);
+            routeItem.classList.remove('selected');
+            routeItem.querySelector('.show').style.display = 'inline-block';
+            routeItem.querySelector('.hide').style.display = 'none';
+          }
         }
+      }
+
+      function highlightRoute(index) {
+        if (index >= 0 && index < routePolylines.length) {
+          const routeData = routePolylines[index];
+          if (!routeData.visible) {
+            // Afficher temporairement avec une opacité réduite
+            routeData.polyline.setStyle({opacity: 0.4});
+            routeData.polyline.addTo(map);
+          }
+          document.getElementById(`route-item-${index}`).classList.add('highlighted');
+        }
+      }
+
+      function unhighlightRoute(index) {
+        if (index >= 0 && index < routePolylines.length) {
+          const routeData = routePolylines[index];
+          if (!routeData.visible) {
+            // Masquer si ce n'était qu'un survol
+            map.removeLayer(routeData.polyline);
+          } else {
+            // Remettre l'opacité normale
+            routeData.polyline.setStyle({opacity: 0.8});
+          }
+          document.getElementById(`route-item-${index}`).classList.remove('highlighted');
+        }
+      }
+
+      function showAllRoutes() {
+        routePolylines.forEach((_, index) => showRoute(index));
+      }
+
+      function hideAllRoutes() {
+        routePolylines.forEach((_, index) => hideRoute(index));
+      }
+
+      function showBestRoute() {
+        hideAllRoutes();
+        if (routePolylines.length > 0) {
+          showRoute(0);
+        }
+      }
+
+      function clearAllRoutes() {
+        routePolylines.forEach(routeData => {
+          if (routeData.visible) {
+            map.removeLayer(routeData.polyline);
+          }
+        });
+        routePolylines = [];
+      }
+
+      function clearMarkers() {
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
+      }
+
+      // Fonctions pour le réseau (inchangées)
+      async function loadNetworkData() {
+        try {
+          const response = await fetch("http://127.0.0.1:5000/network");
+          if (!response.ok) {
+            throw new Error(`Erreur serveur: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log("Réseau chargé, nombre d'arêtes:", data.edges.length);
+
+          return data.edges;
+        } catch (error) {
+          console.error("Erreur lors du chargement du réseau:", error);
+          document.getElementById(
+            "error"
+          ).innerText = `Erreur lors du chargement du réseau: ${error.message}`;
+          return [];
+        }
+      }
+
+      async function toggleNetwork() {
+        const networkBtn = document.getElementById("networkBtn");
+
+        if (isNetworkVisible && networkLayer) {
+          // Cacher le réseau
+          map.removeLayer(networkLayer);
+          networkLayer = null;
+          isNetworkVisible = false;
+          networkBtn.innerText = "Afficher le Réseau";
+          networkBtn.classList.remove("active");
+        } else {
+          // Afficher le réseau
+          networkBtn.disabled = true;
+          networkBtn.innerText = "Chargement...";
+
+          const edges = await loadNetworkData();
+
+          // Créer une couche pour toutes les arêtes du réseau
+          networkLayer = L.layerGroup();
+
+          // Ajouter chaque arête comme une ligne
+          edges.forEach((edgeObj) => {
+            const line = L.polyline(edgeObj.coords, {
+              color: "#2196f3",
+              weight: 1,
+              opacity: 0.5,
+            }).addTo(networkLayer);
+
+            // Événement click sur chaque ligne (segment)
+            line.on("click", function (e) {
+              const index = selectedEdges.findIndex(sel =>
+                (sel.u === edgeObj.u && sel.v === edgeObj.v) ||
+                (sel.u === edgeObj.v && sel.v === edgeObj.u)
+              );
+
+              if (index !== -1) {
+                // Désélectionner
+                selectedEdges.splice(index, 1);
+                line.setStyle({
+                  color: "#2196f3",
+                  weight: 1,
+                  opacity: 0.5
+                });
+              } else {
+                // Sélectionner
+                selectedEdges.push({ u: edgeObj.u, v: edgeObj.v });
+                line.setStyle({
+                  color: "red",
+                  weight: 3,
+                  opacity: 1
+                });
+              }
+            });
+          });
+
+          // Ajouter la couche à la carte
+          networkLayer.addTo(map);
+          isNetworkVisible = true;
+
+          networkBtn.innerText = "Cacher le Réseau";
+          networkBtn.classList.add("active");
+          networkBtn.disabled = false;
+        }
+      }
+
+      async function deleteSelectedEdges() {
+        if (selectedEdges.length === 0) {
+          alert("Aucune arête sélectionnée à supprimer.");
+          return;
+        }
+
+        try {
+          const response = await fetch("http://127.0.0.1:5000/delete_edges", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ edges: selectedEdges }),
+          });
+          if (!response.ok) {
+            throw new Error(`Erreur lors de la suppression: ${response.status}`);
+          }
+          const result = await response.json();
+          console.log("Résultat de la suppression:", result);
+
+          // Nettoyer la couche réseau et recharger
+          networkLayer.clearLayers();
+          selectedEdges = [];
+          toggleNetwork();
+        } catch (error) {
+          console.error("Erreur lors de la suppression des arêtes:", error);
+          alert("Erreur lors de la suppression des arêtes: " + error.message);
+        }
+      }
+      async function saveNetwork() {
+        try {
+          const response = await fetch("http://127.0.0.1:5000/save_network", {
+            method: "POST",
+          });
+
+          if (!response.ok) {
+            throw new Error("Échec de la sauvegarde du réseau.");
+          }
+
+          const result = await response.json();
+          alert(result.message);
+        } catch (error) {
+          alert("Erreur : " + error.message);
+        }
+      }
     </script>
-</body>
+  </body>
 </html>
