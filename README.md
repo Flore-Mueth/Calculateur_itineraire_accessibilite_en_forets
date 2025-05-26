@@ -62,7 +62,7 @@ Une fois le serveur correctement lancé, vous devriez voir ce message dans le te
 * Debugger is active!
 * Debugger PIN: 931-435-741
 
-⚠️ Le chargement initial peut prendre un certain temps, car le réseau du canton de Vaud est relativement volumineux.
+Attention : Le chargement initial peut prendre un certain temps, car le réseau du canton de Vaud est relativement volumineux.
 
 #### 3. Utilisation de l’interface
 
