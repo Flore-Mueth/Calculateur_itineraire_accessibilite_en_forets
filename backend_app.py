@@ -212,9 +212,15 @@ def delete_edges():
 def save_network():
     global G
     try:
+        # Sauvegarde au format pickle
         with open("Vaud.pkl", "wb") as f:
             pickle.dump(G, f)
-        return jsonify({"message": "Le réseau a été enregistré avec succès."})
+
+        # Sauvegarde au format GraphML
+        import osmnx as ox
+        ox.save_graphml(G, filepath="Vaud.graphml")
+
+        return jsonify({"message": "Le réseau a été enregistré au format .pkl et .graphml avec succès."})
     except Exception as e:
         print("Erreur lors de la sauvegarde du réseau:", e)
         return jsonify({"message": "Erreur lors de la sauvegarde."}), 500
