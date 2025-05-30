@@ -66,3 +66,14 @@ Attention : Le chargement initial peut prendre un certain temps, car le réseau 
 
 Une fois le backend lancé, ouvrez le fichier `interface.html` dans un navigateur web. L’interface est alors prête à être utilisée pour simuler des itinéraires d’intervention.
 
+### Correction pour la vile de Vallorbe
+
+Dans le cadre de notre projet, le réseau de routes forestières de la Ville de Vallorbe (Suisse) a été vérifié et corrigé manuellement par le gestionnaire des forêts local. Cette vérification a permis d’ajuster certains tronçons directement via l’interface prévue à cet effet.
+
+Deux formats de fichiers sont fournis :
+
+vallorbe_network.pkl : format sérialisé compatible avec l’interface du projet (pensez à adapter le nom du fichier dans le code).
+
+vallorbe_network.gpkg : format géopackage permettant une visualisation directe dans QGIS.
+
+Ces fichiers contiennent la version corrigée et validée du réseau, utilisable pour l’analyse de l’accessibilité forestière et la simulation d’itinéraires d’urgence.
