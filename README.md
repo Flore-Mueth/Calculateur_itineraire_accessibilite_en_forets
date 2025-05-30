@@ -18,11 +18,9 @@ L’interface prend la forme d’un site web permettant de simuler une intervent
 
 Le calcul se base sur un graphe routier dérivé d’OpenStreetMap, enrichi par nos recherches pour distinguer les routes praticables par des camions. L’algorithme d’optimisation utilise le temps de parcours estimé, calculé à partir des vitesses maximales connues ou estimées sur chaque tronçon.
 
-Si aucun itinéraire praticable n’est trouvé, un message informe l’utilisateur qu’une intervention terrestre est impossible et qu’une solution aérienne est nécessaire.
-
 La recherche du point d’arrivée le plus proche dans le réseau routier ne tient pas compte de la précision géographique et des contraintes de terrain (par exemple, un accès en ligne droite peut être bloqué par un relief infranchissable). C'est porquoi plusieurs nœuds proches sont évalués pour assurer la faisabilité de l’accès.
 
-Enfin, une fonctionnalité permet à l’utilisateur de modifier le réseau routier directement dans l’interface, en fonction de sa connaissance du terrain : suppression de tronçons, ajustement des vitesses, etc., afin de refléter au mieux la réalité opérationnelle.
+Enfin, une fonctionnalité permet à l’utilisateur de modifier le réseau routier directement dans l’interface, en fonction de sa connaissance du terrain : suppression de tronçons, afin de refléter au mieux la réalité opérationnelle.
 
 ### Utilisation
 
@@ -60,7 +58,7 @@ python backend_app.py
 Une fois le serveur correctement lancé, vous devriez voir ce message dans le terminal :
 
 * Debugger is active!
-* Debugger PIN: 931-435-741
+* Debugger PIN: 000-000-000
 
 Attention : Le chargement initial peut prendre un certain temps, car le réseau du canton de Vaud est relativement volumineux.
 
