@@ -66,7 +66,7 @@ Attention : Le chargement initial peut prendre un certain temps, car le réseau 
 
 Une fois le backend lancé, ouvrez le fichier `interface.html` dans un navigateur web. L’interface est alors prête à être utilisée pour simuler des itinéraires d’intervention.
 
-### Correction pour la vile de Vallorbe
+### Correction pour la ville de Vallorbe
 
 Dans le cadre de notre projet, le réseau de routes forestières de la Ville de Vallorbe (Suisse) a été vérifié et corrigé manuellement par le gestionnaire des forêts local. Cette vérification a permis d’ajuster certains tronçons directement via l’interface prévue à cet effet.
 
