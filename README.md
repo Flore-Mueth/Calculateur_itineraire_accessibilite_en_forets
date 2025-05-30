@@ -72,8 +72,8 @@ Dans le cadre de notre projet, le réseau de routes forestières de la Ville de 
 
 Deux formats de fichiers sont fournis :
 
-vallorbe_network.pkl : format sérialisé compatible avec l’interface du projet (pensez à adapter le nom du fichier dans le code).
+`vallorbe_network.pkl` : format sérialisé compatible avec l’interface du projet (pensez à adapter le nom du fichier dans le code).
 
-vallorbe_network.gpkg : format géopackage permettant une visualisation directe dans QGIS.
+`vallorbe_network.gpkg` : format géopackage permettant une visualisation directe dans QGIS.
 
 Ces fichiers contiennent la version corrigée et validée du réseau, utilisable pour l’analyse de l’accessibilité forestière et la simulation d’itinéraires d’urgence.
