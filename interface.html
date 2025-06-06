@@ -446,8 +446,22 @@
             displayMultipleRoutes(latCaserne, lngCaserne, latFire, lngFire);
             document.getElementById("result").innerText = 
               `1 itinéraire trouvé. Distance: ${(result.distance/1000).toFixed(2)} km, Temps: ${result.travel_time} min`;
+          // } else {
+          //   throw new Error("Format de réponse inattendu du serveur");
+          // }
           } else {
-            throw new Error("Format de réponse inattendu du serveur");
+            // Cas : aucun itinéraire → afficher message spécial
+            document.getElementById("result").innerText = result.message || "Intervention en hélicoptère conseillée. Les coordonnées se trouvent à plus de 800m de la route la plus proche.";
+            
+            if (result.message && result.message.includes("hélicoptère")) {
+              document.getElementById("result").style.color = "orangered";
+            } else {
+              document.getElementById("result").style.color = "black";
+            }
+            
+            allRoutes = [];
+            clearAllRoutes();
+            clearMarkers();
           }
 
         } catch (error) {
@@ -535,7 +549,8 @@
               </div>
               <div class="route-details">
                 Distance: ${(route.length / 1000).toFixed(2)} km • 
-                Temps estimé: ${route.travel_time} min
+                Temps estimé: ${route.travel_time} min • 
+                Distance au point d'arrivée: ${route.distance_to_coord.toFixed(1)} m
               </div>
             </div>
             <div class="route-actions">

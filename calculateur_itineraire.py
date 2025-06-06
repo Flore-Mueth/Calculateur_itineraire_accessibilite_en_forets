@@ -5,6 +5,7 @@ import pickle
 from shapely.geometry import Point
 import pandas as pd
 import traceback
+import geopandas as gpd
 
 NETWORK_FILE = "Vaud.graphml"
 PICKLE_FILE = "Vaud.pkl"  # Un format plus efficace pour stocker le graphe
@@ -84,14 +85,29 @@ def calculate_route(G, lat1, lng1, lat2, lng2, k=5):
         # Convertir le graphe en GeoDataFrame pour les nœuds
         gdf_nodes = ox.graph_to_gdfs(G, edges=False)
         
+        # Reprojection en système métrique pour calcul précis des distances
+        gdf_nodes = gdf_nodes.to_crs(epsg=3857)  # projection web (mètres)
+
         # Créer un point pour la destination
         dest_point = Point(lng2, lat2)
-        
+        dest_point_proj = gpd.GeoSeries([dest_point], crs="EPSG:4326").to_crs(epsg=3857).iloc[0]
+
+        # Calculer la distance en mètres entre chaque nœud et le point d'arrivée
+        gdf_nodes['dist_to_dest'] = gdf_nodes['geometry'].distance(dest_point_proj)
+
         # Calculer la distance de chaque nœud à la destination
-        gdf_nodes['dist_to_dest'] = gdf_nodes['geometry'].distance(dest_point)
+        # gdf_nodes['dist_to_dest'] = gdf_nodes['geometry'].distance(dest_point)
         
-        # Obtenir les k nœuds les plus proches de la destination
-        closest_nodes = gdf_nodes.sort_values('dist_to_dest').index[:k].tolist()
+        # Filtrer les nœuds à moins de 800 mètres
+        nearby_nodes = gdf_nodes[gdf_nodes['dist_to_dest'] <= 800]
+        if nearby_nodes.empty:
+            return {
+                "message": "Intervention en hélicoptère conseillée. Les coordonnées se trouvent à plus de 800m de la route la plus proche.",
+                "routes": []
+            }
+
+        # Obtenir les k plus proches dans ceux qui restent
+        closest_nodes = nearby_nodes.sort_values('dist_to_dest').index[:k].tolist()
         print(f"Nœuds destination candidats: {closest_nodes[:3]}...")  # Log des 3 premiers
 
         all_routes = []
@@ -99,7 +115,10 @@ def calculate_route(G, lat1, lng1, lat2, lng2, k=5):
 
         for i, dest in enumerate(closest_nodes):
             try:
-                print(f"Calcul route {i+1}/{k} vers nœud {dest}")
+                # Distance entre noeud et coor
+                dist_to_point = gdf_nodes.loc[dest, 'dist_to_dest']
+                print(f"Calcul de la route {i+1}/{k} vers le nœud {dest} (distance: {dist_to_point:.2f} m)")
+                # print(f"Calcul route {i+1}/{k} vers nœud {dest}")
                 
                 # Calculer le chemin le plus court
                 route = ox.routing.shortest_path(G, orig, dest, weight="travel_time")
@@ -165,7 +184,8 @@ def calculate_route(G, lat1, lng1, lat2, lng2, k=5):
                 route_data = {
                     "geometry": geometry_leaflet,
                     "length": round(route_length),
-                    "travel_time": round(travel_time / 60, 1)  # Convertir en minutes
+                    "travel_time": round(travel_time / 60, 1),  # Convertir en minutes
+                    "distance_to_coord": round(dist_to_point, 1)
                 }
                 
                 all_routes.append(route_data)
@@ -187,8 +207,12 @@ def calculate_route(G, lat1, lng1, lat2, lng2, k=5):
         all_routes.sort(key=lambda x: x['travel_time'])
         
         print(f"Calcul terminé: {len(all_routes)} route(s) valide(s) sur {k} tentatives")
-        return all_routes
 
+        return {
+            "message": f"{len(all_routes)} itinéraire(s) trouvés à moins de 800 m du point cible",
+            "routes": all_routes
+        }
+    
     except Exception as e:
         print(f"Erreur dans calculate_route: {e}")
         traceback.print_exc()
@@ -214,114 +238,6 @@ def validate_route_data(route_data):
         return False, "Temps de trajet invalide: doit être positif"
         
     return True, "Route valide"
-
-# def calculate_route(G, lat1, lng1, lat2, lng2):
-#     """
-#     Calcule le chemin le plus court entre deux coordonnées.
-#     Retourne la géométrie, la longueur et le temps de trajet estimé.
-#     """
-#     try:
-#         # Recherche des nœuds les plus proches en gérant les différentes versions d'OSMnx
-#         try:
-#             # Version plus récente d'OSMnx
-#             orig = ox.nearest_nodes(G, lng1, lat1)
-#             dest = ox.nearest_nodes(G, lng2, lat2)
-#         except AttributeError:
-#             try:
-#                 # Version intermédiaire d'OSMnx
-#                 orig = ox.distance.nearest_nodes(G, X=lng1, Y=lat1)
-#                 dest = ox.distance.nearest_nodes(G, X=lng2, Y=lat2)
-#             except AttributeError:
-#                 # Version ancienne d'OSMnx
-#                 orig = ox.get_nearest_node(G, (lat1, lng1))
-#                 dest = ox.get_nearest_node(G, (lat2, lng2))
-        
-#         # Calculer le chemin le plus court
-#         route = ox.routing.shortest_path(G, orig, dest, weight="travel_time")
-        
-#         if not route:
-#             raise ValueError("Aucun chemin trouvé entre les points")
-        
-#         # Calculer correctement la longueur et le temps de trajet
-#         route_length = 0
-#         travel_time = 0
-        
-#         # Extraire la géométrie du trajet
-#         # Utiliser la méthode correcte pour obtenir les attributs des arêtes
-#         route_edges = []
-#         for u, v in zip(route[:-1], route[1:]):
-#             # Obtenir les données de l'arête entre les nœuds u et v
-#             # Le dernier élément True est pour récupérer les données du premier edge si plusieurs existent
-#             edge_data = G.get_edge_data(u, v, default=None)
-            
-#             # Il peut y avoir plusieurs arêtes entre les mêmes nœuds, nous prenons le premier
-#             if edge_data is None:
-#                 continue
-                
-#             if len(edge_data) > 0:
-#                 # S'il y a plusieurs arêtes parallèles, prenez la première
-#                 key = list(edge_data.keys())[0]
-#                 edge_attrs = edge_data[key].copy()
-#                 edge_attrs['u'] = u
-#                 edge_attrs['v'] = v
-#                 route_edges.append(edge_attrs)
-        
-#         # Parcourir tous les segments du trajet
-#         route_geometry = []
-#         for edge in route_edges:
-#             # Additionner la longueur de chaque segment
-#             if 'length' in edge:
-#                 route_length += edge['length']
-#             elif 'weight' in edge and edge.get('highway') is not None:
-#                 # Estimation de la longueur par le poids si c'est une route
-#                 route_length += edge['weight'] * 100  # Estimation grossière
-            
-#             # Additionner le temps de trajet de chaque segment
-#             if 'travel_time' in edge:
-#                 travel_time += edge['travel_time']
-#             elif 'length' in edge and 'speed_kph' in edge:
-#                 # Calcul du temps à partir de la distance et de la vitesse
-#                 # Convertir km/h en m/s: speed_kph * 1000 / 3600
-#                 speed_ms = edge['speed_kph'] * 1000 / 3600
-#                 travel_time += edge['length'] / speed_ms if speed_ms > 0 else 0
-#             elif 'length' in edge:
-#                 # Estimation basée sur une vitesse moyenne de 50 km/h
-#                 speed_ms = 50 * 1000 / 3600  # 50 km/h en m/s
-#                 travel_time += edge['length'] / speed_ms
-            
-#             # Collecter la géométrie
-#             if 'geometry' in edge:
-#                 coords = list(edge['geometry'].coords)
-#                 for coord in coords:
-#                     route_geometry.append(coord)
-#             else:
-#                 # Si pas de géométrie, utiliser les coordonnées des nœuds
-#                 u, v = edge['u'], edge['v']
-#                 # Éviter les doublons en n'ajoutant que le nœud de départ pour chaque segment
-#                 # (sauf pour le premier segment où on ajoute les deux)
-#                 start_node = G.nodes[u]
-#                 end_node = G.nodes[v]
-                
-#                 if len(route_geometry) == 0:  # Premier segment
-#                     if 'x' in start_node and 'y' in start_node:
-#                         route_geometry.append((start_node['x'], start_node['y']))
-                
-#                 # Toujours ajouter le nœud de fin
-#                 if 'x' in end_node and 'y' in end_node:
-#                     route_geometry.append((end_node['x'], end_node['y']))
-        
-#         # Arrondir la longueur en mètres
-#         route_length = round(route_length)
-        
-#         # Convertir le temps de trajet en minutes
-#         travel_time_minutes = round(travel_time / 60, 1)
-        
-#         return route_geometry, route_length, travel_time_minutes
-
-#     except nx.NetworkXNoPath:
-#         raise ValueError("Aucun chemin n'existe entre ces deux points")
-#     except Exception as e:
-#         raise ValueError(f"Erreur lors du calcul de l'itinéraire: {str(e)}")
 
 def get_network_edges(G):
     """
